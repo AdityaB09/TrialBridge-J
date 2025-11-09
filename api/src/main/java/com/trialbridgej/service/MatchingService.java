@@ -126,11 +126,13 @@ public class MatchingService {
         }
 
         if (hardExcluded) {
-            r.eligibilityScore = 0;
-            r.overallScore = Double.NaN; // filtered out by caller
-            r.eligibilityLabel = "Excluded";
-            return r;
-        }
+    r.eligibilityScore = 0;
+    // Give excluded trials a low score so they sort last, but still show up
+    r.overallScore = -1.0;
+    r.eligibilityLabel = "Excluded";
+    return r;
+}
+
 
         r.eligibilityScore = eligibilityScore;
 
