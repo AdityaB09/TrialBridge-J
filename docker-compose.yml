@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./api
+    container_name: trialbridge-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - trialbridge-net
+
+  ui:
+    build: ./ui
+    container_name: trialbridge-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - trialbridge-net
+
+networks:
+  trialbridge-net:
+    driver: bridge
