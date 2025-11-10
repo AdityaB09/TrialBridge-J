@@ -34,11 +34,10 @@ public class MatchingService {
         List<MatchResult> results = new ArrayList<>();
         for (Trial t : trialService.getAll()) {
             MatchResult r = scorePair(p, t);
-            if (!Double.isNaN(r.overallScore)) {
-                results.add(r);
-            }
+            // include all results, even excluded ones (UI will show exclusion reasons)
+            results.add(r);
         }
-        Collections.sort(results);
+        Collections.sort(results); // sort by overallScore desc
         return results;
     }
 
@@ -54,14 +53,13 @@ public class MatchingService {
         r.trialId = t.id;
         r.trialTitle = t.title;
 
-        // 1) Similarity
+        // similarity
         r.similarityScore = nlpService.cosine(p.embedding, t.embedding);
 
-        // 2) Eligibility rule checks
         double eligibilityScore = 0;
         boolean hardExcluded = false;
 
-        // Age constraints from inclusion criteria
+        // Age constraints
         boolean ageMatched = false;
         if (p.age != null && p.age > 0) {
             for (var c : t.inclusion) {
@@ -86,30 +84,33 @@ public class MatchingService {
         String trialCond = t.condition != null ? t.condition.toLowerCase(Locale.ROOT) : "";
         if (!trialCond.isBlank() && !patientConditionsJoined.isBlank()) {
             if (patientConditionsJoined.contains(trialCond)
-                    || trialCond.contains("diabetes") && patientConditionsJoined.contains("diabetes")) {
+                    || (trialCond.contains("diabetes") && patientConditionsJoined.contains("diabetes"))) {
                 eligibilityScore += 0.25;
                 conditionMatched = true;
                 r.reasons.add("Has condition: " + t.condition);
             }
         }
 
-        // Lab threshold example: "HbA1c ≥ 7.0"
+        // Lab threshold: HbA1c
         if (p.labs.containsKey("hba1c")) {
             double val = p.labs.get("hba1c");
             for (var c : t.inclusion) {
-                if (c.text.toLowerCase(Locale.ROOT).contains("hba1c")) {
-                    if (c.text.contains("≥") || c.text.contains(">=")) {
+                String lower = c.text.toLowerCase(Locale.ROOT);
+                if (lower.contains("hba1c")) {
+                    if (c.text.contains("≥") || c.text.contains(">=") || lower.contains(">=") || lower.contains(">= ")) {
                         double threshold = parseNumber(c.text);
                         if (!Double.isNaN(threshold) && val >= threshold) {
                             eligibilityScore += 0.25;
                             r.reasons.add("HbA1c " + val + " ≥ " + threshold);
+                        } else if (!Double.isNaN(threshold)) {
+                            r.reasons.add("HbA1c " + val + " < " + threshold);
                         }
                     }
                 }
             }
         }
 
-        // Exclusion: simple stroke check
+        // Exclusion: stroke
         for (var c : t.exclusion) {
             String lower = c.text.toLowerCase(Locale.ROOT);
             if (lower.contains("stroke")) {
@@ -126,13 +127,12 @@ public class MatchingService {
         }
 
         if (hardExcluded) {
-    r.eligibilityScore = 0;
-    // Give excluded trials a low score so they sort last, but still show up
-    r.overallScore = -1.0;
-    r.eligibilityLabel = "Excluded";
-    return r;
-}
-
+            // show excluded trials with low score so UI can explain why
+            r.eligibilityScore = 0;
+            r.overallScore = -1.0;
+            r.eligibilityLabel = "Excluded";
+            return r;
+        }
 
         r.eligibilityScore = eligibilityScore;
 
@@ -144,8 +144,10 @@ public class MatchingService {
             r.eligibilityLabel = "Likely eligible";
         } else if (eligibilityScore > 0.2) {
             r.eligibilityLabel = "Possibly eligible";
-        } else {
+        } else if (r.similarityScore > 0.1) {
             r.eligibilityLabel = "Weak match";
+        } else {
+            r.eligibilityLabel = "Very weak match";
         }
 
         if (!ageMatched) {

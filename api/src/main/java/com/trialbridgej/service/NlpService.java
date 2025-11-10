@@ -56,7 +56,7 @@ public class NlpService {
         if (lower.contains("diabetes") && !result.contains("type 2 diabetes")) result.add("diabetes");
         if (lower.contains("hypertension")) result.add("hypertension");
 
-        // Handle stroke carefully: only add if it's not explicitly negated
+        // Stroke: only mark as condition if not explicitly negated
         boolean mentionsStroke = lower.contains("stroke");
         boolean negatedStroke =
                 lower.contains("no history of stroke") ||
@@ -80,6 +80,7 @@ public class NlpService {
             lower.contains("no stroke history")) {
             result.add("no stroke history");
         }
+
         if (lower.contains("history of stroke") && !lower.contains("no history of stroke")) {
             result.add("stroke");
         }

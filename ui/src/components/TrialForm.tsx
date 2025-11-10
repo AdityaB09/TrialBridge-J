@@ -6,50 +6,47 @@ interface TrialFormProps {
 }
 
 export const TrialForm: React.FC<TrialFormProps> = ({ onTrialIngested }) => {
-  const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  
   const [title, setTitle] = useState("T2D Glycemic Control Study");
   const [condition, setCondition] = useState("type 2 diabetes");
   const [description, setDescription] = useState(
     "Phase II study evaluating improved glycemic control with new therapy."
   );
   const [inclusion, setInclusion] = useState<string>(
-    "Age 40-70\nDiagnosed Type 2 diabetes\nHbA1c ≥ 7.0"
+    "Age 40-70\nDiagnosed Type 2 diabetes\nHbA1c >= 7.0"
   );
   const [exclusion, setExclusion] = useState<string>("History of stroke");
-  
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSaving(true);
-  setStatus(null);
-  try {
-    const payload = {
-      title,
-      condition,
-      description,
-      inclusionCriteria: inclusion
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      exclusionCriteria: exclusion
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    };
-    await ingestTrial(payload);
-    onTrialIngested();
-    setStatus("Trial saved successfully ✔");
-    setTimeout(() => setStatus(null), 3000);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save trial");
-  } finally {
-    setSaving(false);
-  }
-};
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setStatus(null);
+    try {
+      const payload = {
+        title,
+        condition,
+        description,
+        inclusionCriteria: inclusion
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        exclusionCriteria: exclusion
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      };
+      await ingestTrial(payload);
+      onTrialIngested();
+      setStatus("Trial saved successfully ✔");
+      setTimeout(() => setStatus(null), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save trial");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="card">
@@ -96,14 +93,13 @@ export const TrialForm: React.FC<TrialFormProps> = ({ onTrialIngested }) => {
           />
         </div>
         <button className="btn" type="submit" disabled={saving}>
-  {saving ? "Saving..." : "Save trial"}
-</button>
-{status && (
-  <div style={{ marginTop: 6, fontSize: 11, color: "var(--success)" }}>
-    {status}
-  </div>
-)}
-
+          {saving ? "Saving..." : "Save trial"}
+        </button>
+        {status && (
+          <div style={{ marginTop: 6, fontSize: 11, color: "var(--success)" }}>
+            {status}
+          </div>
+        )}
       </form>
     </div>
   );

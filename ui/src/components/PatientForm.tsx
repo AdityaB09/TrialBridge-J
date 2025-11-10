@@ -16,28 +16,27 @@ export const PatientForm: React.FC<PatientFormProps> = ({ onPatientSaved }) => {
   const [status, setStatus] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSaving(true);
-  setStatus(null);
-  try {
-    const payload: any = {
-      note,
-      sex
-    };
-    if (age) payload.age = Number(age);
-    const res = await ingestPatient(payload);
-    setLastId(res.id);
-    onPatientSaved(res.id);
-    setStatus("Patient saved ✔");
-    setTimeout(() => setStatus(null), 3000);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save patient");
-  } finally {
-    setSaving(false);
-  }
-};
-
+    e.preventDefault();
+    setSaving(true);
+    setStatus(null);
+    try {
+      const payload: any = {
+        note,
+        sex
+      };
+      if (age) payload.age = Number(age);
+      const res = await ingestPatient(payload);
+      setLastId(res.id);
+      onPatientSaved(res.id);
+      setStatus("Patient saved ✔");
+      setTimeout(() => setStatus(null), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save patient");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="card">
@@ -70,23 +69,29 @@ export const PatientForm: React.FC<PatientFormProps> = ({ onPatientSaved }) => {
               placeholder="male"
             />
           </div>
-          <div className="field" style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
+          <div
+            className="field"
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "flex-end"
+            }}
+          >
             <button className="btn" type="submit" disabled={saving}>
               {saving ? "Saving..." : "Save patient"}
             </button>
           </div>
         </div>
         {lastId && (
-  <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
-    Current patientId: <strong>{lastId}</strong>
-  </div>
-)}
-{status && (
-  <div style={{ marginTop: 4, fontSize: 11, color: "var(--success)" }}>
-    {status}
-  </div>
-)}
-
+          <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+            Current patientId: <strong>{lastId}</strong>
+          </div>
+        )}
+        {status && (
+          <div style={{ marginTop: 4, fontSize: 11, color: "var(--success)" }}>
+            {status}
+          </div>
+        )}
       </form>
     </div>
   );
